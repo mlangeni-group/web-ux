@@ -1,4 +1,4 @@
-web-ux v1.0.0
+# web-ux v1.0.0
 
 A complete frontend productivity suite built on jQuery, Bootstrap 5, and JWT.
 Provides ready‑to‑use helpers for AJAX, Bootstrap widgets, AES‑256‑GCM encryption (fully compatible with the PHP Bangwe class), form validation, i18n, reactive state, performance logging, and everyday frontend tasks.
