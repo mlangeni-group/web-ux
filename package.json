@@ -1,6 +1,6 @@
 {
   "name": "@mlangeni-group/web-ux",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Frontend productivity suite: AJAX, Bootstrap widgets, encryption, forms, i18n, store, and more",
   "main": "index.js",
   "scripts": {
