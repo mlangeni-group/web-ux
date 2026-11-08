@@ -4,6 +4,7 @@
   "description": "Frontend productivity suite: AJAX, Bootstrap widgets, encryption, forms, i18n, store, and more",
   "main": "index.js",
   "scripts": {
+    "build": "node esbuild.config.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "peerDependencies": {
@@ -14,7 +15,11 @@
   "keywords": ["frontend", "jquery", "bootstrap", "ajax", "encryption", "validation", "i18n", "store"],
   "license": "MIT",
   "author": "Precious Lyson, Mlangeni Group",
-  "devDependencies": {},
+  "devDependencies": {
+    "bootstrap": "^5.0.0",
+    "esbuild": "^0.25.0",
+    "jquery": "^3.6.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mlangeni-group/web-ux.git"

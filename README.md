@@ -414,12 +414,26 @@ Perf Module
 
 ---
 
-Usage without npm (UMD Bundle)
+Usage without npm (Browser Bundle)
 
-1. Import the web-ux.umd.js:
-   ```javascript
-   <script src="path/to/web-ux.umd.js"></script>
-   ```
+Build the standalone browser bundle:
+
+```bash
+npm install
+npm run build
+```
+
+This creates `dist/web-ux.js`. jQuery and Bootstrap JavaScript are bundled; include Bootstrap's CSS separately if you use its components. Load the bundle with a script tag and access the API through the `webux` global:
+
+```html
+<script src="path/to/web-ux.js"></script>
+<script>
+  webux.ajax.get('/api/users');
+  webux.store.create({ user: null });
+</script>
+```
+
+The JWT helpers in `webux.encryption.jwt` rely on `jsonwebtoken`, which is Node-oriented and is not included in the browser bundle.
 
 ---
 
