@@ -69,7 +69,7 @@ npm install jquery bootstrap jsonwebtoken
 Quick Start
 
 ```javascript
-import machinjiri from 'web-ux';
+import webux from 'web-ux';
 // or import individual modules
 import { ajax, bootstrap, form, i18n, store } from 'web-ux';
 

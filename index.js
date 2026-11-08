@@ -1,5 +1,4 @@
 /**
- * machinjiri-web
  * Frontend utilities for jQuery, Bootstrap 5, and JWT.
  */
 import * as ajax from './lib/ajax';
