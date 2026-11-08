@@ -25,6 +25,6 @@
     "url": "https://github.com/mlangeni-group/web-ux.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com/"
+    "registry": "https://registry.npmjs.org/"
   }   
 }
