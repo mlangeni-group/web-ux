@@ -1,0 +1,22 @@
+{
+  "name": "web-ux",
+  "version": "1.0.0",
+  "description": "Frontend productivity suite: AJAX, Bootstrap widgets, encryption, forms, i18n, store, and more",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "peerDependencies": {
+    "bootstrap": "^5.0.0",
+    "jquery": "^3.6.0",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "keywords": ["frontend", "jquery", "bootstrap", "ajax", "encryption", "validation", "i18n", "store"],
+  "license": "MIT",
+  "author": "Precious Lyson, Mlangeni Group",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mlangeni-group/web-ux.git"
+  }
+}
