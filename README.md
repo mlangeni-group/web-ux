@@ -1,447 +1,501 @@
-# web-ux v1.1.0
+# @mlangeni-group/web-ux
 
-A complete frontend productivity suite built on jQuery, Bootstrap 5, and JWT.
-Provides ready‑to‑use helpers for AJAX, Bootstrap widgets, AES‑256‑GCM encryption (fully compatible with the PHP Bangwe class), form validation, i18n, reactive state, performance logging, and everyday frontend tasks.
+[![npm version](https://img.shields.io/npm/v/%40mlangeni-group%2Fweb-ux?logo=npm&label=npm)](https://www.npmjs.com/package/@mlangeni-group/web-ux)
+[![License](https://img.shields.io/npm/l/%40mlangeni-group%2Fweb-ux?label=license)](https://www.npmjs.com/package/@mlangeni-group/web-ux)
+[![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5-7952B3?logo=bootstrap&logoColor=white)](https://getbootstrap.com/)
+[![jQuery](https://img.shields.io/badge/jQuery-3.x-0769AD?logo=jquery&logoColor=white)](https://jquery.com/)
 
-https://img.shields.io/npm/v/web-ux
-https://img.shields.io/npm/l/web-ux
+![web-ux frontend toolkit](https://img.shields.io/badge/MLANGENI_GROUP-web--ux-252A34?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
 
----
+A browser-first frontend utility package for jQuery and Bootstrap 5 projects. It bundles common UI, request, i18n, form, storage, encryption, and environment helpers into one lightweight toolkit so you can build productively without re-implementing the same patterns across projects.
 
-Table of Contents
+This package is designed for modern web apps that want:
 
-· Features
-· Installation
-· Quick Start
-· API Reference
-  · AJAX Module
-  · Bootstrap Module
-  · Encryption Module
-  · Utilities Module
-  · Environment Module
-  · Loader Module
-  · DOM Module
-  · Cookie Module
-  · Form Module
-  · i18n Module
-  · Store Module
-  · Log Module
-  · Perf Module
-· Usage without npm (UMD Bundle)
-· TypeScript Support
-· License
+- ergonomic AJAX helpers with caching, retry logic, and upload/download support
+- Bootstrap 5 convenience wrappers for modals, toasts, alerts, and notifications
+- form validation and masking helpers
+- lightweight state management and local storage utilities
+- environment loading and translation helpers
+- crypto utilities for AES, base64, and JWT usage in the browser
+- page loading indicators, skeletons, and progress utilities
 
----
+## Features
 
-Features
+- AJAX client with request configuration, abort support, SSE, upload/download progress, and automatic loaders
+- Bootstrap UI helpers: modal, toast, offcanvas, slide-ins, alerts, tooltips, popovers
+- Form validation rules, custom rules, auto-save, reset confirmation, and file preview
+- Translation support via `i18n.t(...)`
+- Local storage wrappers and browser-friendly utility helpers
+- Environment variable loading via `window.__ENV` or a JSON script tag
+- Web Crypto-based encryption helpers, including Bangwe-compatible AES-GCM helpers
+- Performance timing helpers and simple pub/sub event bus
+- Cookie helpers and DOM utilities
 
-· AJAX Utilities – jQuery‑based requests with cancellation, in‑memory caching, exponential backoff, file download with progress, and SSE/EventSource helper.
-· Bootstrap Components – Programmatic creation of Modals, Offcanvas, Toasts (with queue and shorthand), Alerts, Carousel, Collapse, Tabs, Popover, and Tooltip.
-· Encryption – AES‑256‑GCM via Web Crypto API. Password‑based and raw‑key encryption fully compatible with the PHP Bangwe class.
-· Form Validation – Declarative rules (required, email, minlength, etc.), live validation, error/valid classes, and input masks.
-· Internationalisation – Simple t() function with placeholder interpolation.
-· Reactive Store – Minimal publish/subscribe state management.
-· Utilities – Debounce, throttle, deep clone/merge, UUID, date formatting, relative time, number/currency formatting, validators, storage with expiry, clipboard, and more.
-· Environment Variables – Client‑side env helper (for public configuration).
-· Loader Helpers – Spinner, progress bar, page‑level overlay, and loading button state.
-· DOM Helpers – Smooth scroll, form serialisation, viewport detection, infinite scroll, and lazy loading (IntersectionObserver).
-· Cookie Helpers – Simple set/get/delete.
-· Logging & Performance – Silent‑in‑production logging and high‑resolution performance marks.
+## Installation
 
----
-
-Installation
+Install the package and required browser dependencies:
 
 ```bash
-npm install web-ux
+npm install @mlangeni-group/web-ux jquery bootstrap jsonwebtoken
 ```
 
-Peer Dependencies
-
-```bash
-npm install jquery bootstrap jsonwebtoken
-```
-
-· jsonwebtoken is optional if you don’t use JWT features.
-
----
-
-Quick Start
-
-```javascript
-import webux from 'web-ux';
-// or import individual modules
-import { ajax, bootstrap, form, i18n, store } from 'web-ux';
-
-// Configure AJAX globally
-ajax.configure({
-  tokenGetter: () => localStorage.getItem('token'),
-  showLoader: true,
-});
-
-// GET request with caching
-ajax.get('/api/users', null, { cache: true });
-
-// Bootstrap toast (queued)
-bootstrap.toastQueue({ message: 'Welcome!', variant: 'success' });
-
-// Form validation
-form.validate('#loginForm', {
-  email: { required: true, email: true },
-  password: { required: true, minlength: 6 }
-}, {
-  onSubmit: (data) => console.log(data)
-});
-
-// i18n
-i18n.load({ hello: 'Hello {{name}}!' });
-i18n.t('hello', { name: 'World' }); // "Hello World!"
-
-// Reactive store
-const userStore = store.create({ user: null });
-userStore.subscribe('user', (newUser) => console.log('User updated', newUser));
-userStore.set('user', { id: 1, name: 'Alice' });
-```
-
----
-
-API Reference
-
-AJAX Module
-
-All methods return a Promise that resolves with the parsed response data (or the raw jqXHR if raw: true). Errors reject with an enhanced Error object containing status, response, and jqXHR properties.
-
-ajax.configure(options)
-
-Option Type Default Description
-tokenGetter Function null Function returning a JWT token to send as Authorization: Bearer ….
-showLoader boolean true Automatically show/hide a global loader element (#global-loader).
-showToasts boolean true Show Bootstrap error toasts when a request fails.
-retries number 0 Number of retry attempts on server errors (status ≥ 500).
-retryDelay number 1000 Delay in ms between retries.
-useExponentialBackoff boolean false Use exponential backoff for retry delays.
-cache boolean false Enable in‑memory caching for GET requests.
-cacheTTL number 60 Cache time‑to‑live in seconds.
-
-ajax.request(options)
-
-Generic request wrapper. Accepts all jQuery $.ajax settings plus extras:
-
-Option Type Description
-requestId string Unique identifier to enable cancellation via ajax.abort().
-cache boolean Per‑request cache override.
-cacheTTL number Per‑request cache TTL.
-raw boolean If true, resolve with the raw jqXHR object.
-retries number Per‑request retry count.
-useExponentialBackoff boolean Per‑request backoff setting.
-
-Convenience Methods
-
-· ajax.get(url, data?, options?)
-· ajax.post(url, data?, options?)
-· ajax.put(url, data?, options?)
-· ajax.patch(url, data?, options?)
-· ajax.del(url, options?)
-
-ajax.upload(url, files, extraData?, options?)
-
-Upload files via FormData. files can be a File, FileList, or object with field names.
-
-```javascript
-ajax.upload('/api/upload', fileInput.files[0], { userId: 123 })
-   .then(res => console.log('Uploaded', res));
-```
-
-ajax.download(url, filename?, options?)
-
-Fetch a file and trigger download, with progress reporting.
-
-```javascript
-ajax.download('/report.pdf', 'report.pdf', {
-  onProgress: percent => console.log(`${percent}%`)
-});
-```
-
-ajax.abort(requestId)
-
-Cancel a pending request identified by requestId.
-
-```javascript
-ajax.get('/search', { q: 'term' }, { requestId: 'search' });
-ajax.abort('search');
-```
-
-ajax.sse(url, options?)
-
-Create an EventSource with optional onOpen, onMessage, onError callbacks. Returns { close, source }.
-
-```javascript
-const stream = ajax.sse('/events', {
-  onMessage: e => console.log(e.data)
-});
-// stream.close();
-```
-
----
-
-Bootstrap Module
-
-All methods work on top of Bootstrap 5’s JavaScript API.
-
-bootstrap.modal(options)
-
-Create and show a dynamic modal.
-
-Option Type Description
-title string Title (HTML).
-body string Body HTML.
-buttons Array Button objects: { text, class, dismiss, handler }.
-static boolean Static backdrop (default: true).
-
-Returns the bootstrap.Modal instance.
-
-bootstrap.offcanvas(options)
-
-Create and show an offcanvas panel. Options: title, body, placement (start, end, top, bottom).
-
-```javascript
-bootstrap.offcanvas({ title: 'Menu', body: '<ul>...</ul>', placement: 'end' });
-```
-
-bootstrap.toast(options)
-
-Show a Bootstrap toast.
-
-Option Type Default Description
-title string '' Header title.
-message string required Body text.
-variant string 'info' success, danger, warning, info.
-delay number 5000 Auto‑hide ms.
-container string '#toast-container' Target container.
-
-Toast Helpers
-
-· bootstrap.toastSuccess(message, title?) – green toast.
-· bootstrap.toastError(message, title?) – red toast.
-· bootstrap.toastWarning(message, title?) – yellow toast.
-· bootstrap.toastQueue(options) – enqueue toasts to show one after another.
-
-bootstrap.alert(message, variant?, target?, dismissible?)
-
-Create a dismissible Bootstrap alert.
-
-Component Wrappers
-
-· bootstrap.carousel(selector, options?) – returns Carousel instance.
-· bootstrap.collapse(selector, options?) – returns Collapse instance.
-· bootstrap.tab(selector) – activates a Bootstrap tab.
-· bootstrap.popover(element, options?) – returns Popover instance.
-· bootstrap.tooltip(element, options?) – returns Tooltip instance.
-· bootstrap.initTooltipsAndPopovers(scope?) – initialise all [data-bs-toggle] elements inside scope.
-
----
-
-Encryption Module
-
-Two styles of encryption:
-
-1. Password‑based – PBKDF2 key derivation.
-2. Raw‑key – Fully compatible with the PHP Bangwe class.
-
-Password‑based
-
-· encryptAES(plaintext, password): Promise<string>
-· decryptAES(ciphertextBase64, password): Promise<string>
-
-Raw‑key (Bangwe Compatible)
-
-· importRawKey(base64Key): Promise<CryptoKey>
-· encryptWithKey(plaintext, key): Promise<{data, iv, tag, cipher}>
-· decryptWithKey(dataBase64, ivBase64, tagBase64, key): Promise<string>
-· encryptToJson(plaintext, key): Promise<string> – returns JSON like {"data":"...","iv":"...","tag":"...","cipher":"aes-256-gcm"}.
-· decryptFromJson(jsonString, key): Promise<string> – decrypts the JSON format.
-
-The key argument can be a Base64‑encoded string (32 bytes) or a CryptoKey from importRawKey.
-
-Other helpers
-
-· sha256(message): Promise<string> – hex digest.
-· base64.encode(str) / base64.decode(b64) – UTF‑8 safe.
-· jwt.decode(token) / jwt.verify(token, secret, options) – requires jsonwebtoken.
-
----
-
-Utilities Module
-
-Category Function Description
-Timing debounce(fn, delay) Debounce – postpones execution.
- debounceLeading(fn, delay) Fires immediately, then ignores calls within delay.
- throttle(fn, limit) At most once per limit.
-Objects deepClone(obj) Deep copy via structuredClone or JSON.
- deepMerge(target, source) Recursive merge.
-ID uuid() Generate UUID v4.
- randomId(length?) Random alphanumeric ID.
-Query Strings queryString.stringify(obj) Build query string.
- queryString.parse(str) Parse query string into an object.
-Date date.format(date, format?) Format date (e.g., YYYY-MM-DD HH:mm).
- date.relativeTime(date) “3 minutes ago” style.
-Number number.format(num, locales?) Locale‑aware formatting.
- number.currency(num, currency?, locales?) Currency formatting.
-Validators isEmail(str): boolean Email check.
- isUrl(str): boolean URL check.
- isNumeric(str): boolean Numeric string check.
-Storage storage.set(key, value, ttlSeconds?) localStorage with expiry.
- storage.get(key) Retrieve value (null if expired).
- storage.remove(key) / storage.clear() Remove or clear.
-Clipboard copyToClipboard(text) Copy to clipboard.
-Bytes formatBytes(bytes, decimals?) e.g., "1.5 MB".
-
----
-
-Environment Module
-
-· env.setEnv(obj) – Set environment variables object.
-· env.get(key, defaultValue?) – Retrieve an environment variable.
-
-```javascript
-env.setEnv({ API_URL: 'https://api.example.com' });
-env.get('API_URL'); // 'https://api.example.com'
-```
-
-Security: Never expose private keys/secrets; use only for public configuration.
-
----
-
-Loader Module
-
-· showSpinner(target?) – Show spinner inside target (default #global-loader).
-· hideSpinner(target?) – Hide spinner.
-· showProgress(percent?, options?) – Show progress bar; 0 = indeterminate.
-· hideProgress(target?) – Hide progress bar.
-· showPageLoader() – Full‑page overlay with spinner.
-· hidePageLoader() – Remove the overlay.
-· loadingButton(selector, loading) – Toggle spinner inside a button and disable it.
-
----
-
-DOM Module
-
-· scrollTo(target, options?) – Smooth scroll to selector, element, or Y coordinate.
-· scrollToTop() – Smooth scroll to top.
-· isInViewport(el) – Check if element is visible.
-· serializeForm(form, asJson?) – Serialise form to object or JSON.
-· getFormData(form) – Alias for serializeForm without JSON.
-· infiniteScroll(containerSelector, callback, threshold?) – Trigger callback when nearing the bottom. Returns { off }.
-· lazyLoad(selector?) – Load [data-src] images/iframes as they enter the viewport using IntersectionObserver.
-
----
-
-Cookie Module
-
-· setCookie(name, value, days?, path?, domain?, secure?)
-· getCookie(name)
-· deleteCookie(name, path?, domain?)
-
----
-
-Form Module
-
-· form.validate(formSelector, rules, options?) – Validates fields and shows Bootstrap feedback.
-    Rules: required, minlength, maxlength, email, url, pattern, match.
-    Options: errorClass (default is-invalid), validClass (is-valid), onSubmit(data), liveValidate.
-    Returns true if valid, false otherwise.
-· form.setValues(formSelector, data) – Fill form fields from an object.
-· form.clear(formSelector) – Reset form and remove validation classes.
-· form.mask(selector, pattern) – Apply a simple numeric mask (e.g., "(000) 000-0000").
-· form.serializeForm(form, asJson?) – Same as DOM module.
-
-Example:
-
-```javascript
-form.validate('#signupForm', {
-  name: { required: true, minlength: 2 },
-  email: { required: true, email: true },
-  password: { required: true, minlength: 8 },
-  confirm: { required: true, match: 'password' }
-}, {
-  onSubmit: data => ajax.post('/api/register', data)
-});
-```
-
----
-
-i18n Module
-
-· i18n.load(translations) – Add key‑value pairs.
-· i18n.t(key, params?) – Translate with {{placeholder}} interpolation.
-· i18n.setLocale(locale) – Set current locale (for future dynamic loading).
-· i18n.getLocale() – Get current locale.
-
----
-
-Store Module (Reactive State)
-
-```javascript
-const store = store.create(initialState);
-
-store.set('key', value);
-store.get('key');          // or store.get() for full state
-store.subscribe('key', (newValue, oldValue) => { … });
-```
-
-Subscriptions return an unsubscribe function.
-
----
-
-Log Module
-
-log.setLevel('debug' | 'info' | 'warn' | 'error' | 'none') – control output.
-Default is "debug". In production, set to "warn" or "error".
-
-```javascript
-log.debug('...');
-log.info('...');
-log.warn('...');
-log.error('...');
-```
-
----
-
-Perf Module
-
-· perf.start(label) – Record start time.
-· perf.end(label) – Return elapsed milliseconds since start.
-
----
-
-Usage without npm (Browser Bundle)
-
-Build the standalone browser bundle:
-
-```bash
-npm install
-npm run build
-```
-
-This creates `dist/web-ux.js`. jQuery and Bootstrap JavaScript are bundled; include Bootstrap's CSS separately if you use its components. Load the bundle with a script tag and access the API through the `webux` global:
+If you are using Bootstrap in a plain HTML page, include the scripts before your bundle:
 
 ```html
-<script src="path/to/web-ux.js"></script>
-<script>
-  webux.ajax.get('/api/users');
-  webux.store.create({ user: null });
+<script src="/node_modules/jquery/dist/jquery.min.js"></script>
+<script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module" src="dist/web-ux.js"></script>
+```
+
+## Importing
+
+Use named imports for the modules you need:
+
+```js
+import {
+  ajax,
+  bootstrap,
+  form,
+  utils,
+  env,
+  i18n,
+  encryption,
+  loader,
+  cookie,
+  store,
+  perf,
+  dom,
+} from '@mlangeni-group/web-ux';
+```
+
+Or import the whole bundle:
+
+```js
+import webUx from '@mlangeni-group/web-ux';
+
+const { ajax, bootstrap, form, utils } = webUx;
+```
+
+## Quick start
+
+### 1) Configure the AJAX client
+
+```js
+import { ajax } from '@mlangeni-group/web-ux';
+
+ajax.configure({
+  baseUrl: '/api',
+  timeout: 30000,
+  showLoader: true,
+  loaderType: 'spinner',
+  tokenGetter: () => localStorage.getItem('token'),
+  showToasts: true,
+});
+
+ajax.get('/users', { page: 1, limit: 20 })
+  .then((users) => console.log(users))
+  .catch((error) => console.error(error));
+```
+
+### 2) Send a POST request
+
+```js
+ajax.post('/auth/login', {
+  email: 'user@example.com',
+  password: 'secret-password',
+})
+  .then((response) => {
+    console.log('Logged in:', response);
+  })
+  .catch((error) => {
+    console.error('Login failed:', error.message);
+  });
+```
+
+### 3) Use Bootstrap helpers
+
+```js
+import { bootstrap } from '@mlangeni-group/web-ux';
+
+bootstrap.toastSuccess('Profile updated successfully');
+
+bootstrap.modal({
+  title: 'Are you sure?',
+  body: 'This action cannot be undone.',
+  buttons: [
+    { text: 'Cancel', class: 'btn-secondary', dismiss: true },
+    { text: 'Delete', class: 'btn-danger', dismiss: false, handler: () => {
+      console.log('Deleted');
+    } },
+  ],
+});
+```
+
+### 4) Validate a form
+
+```js
+import { form } from '@mlangeni-group/web-ux';
+
+form.validate('#login-form', {
+  email: {
+    required: true,
+    email: true,
+  },
+  password: {
+    required: true,
+    minlength: 8,
+  },
+}, {
+  onSubmit: (data) => {
+    console.log('Form payload:', data);
+  },
+});
+```
+
+### 5) Use the storage utility
+
+```js
+import { utils } from '@mlangeni-group/web-ux';
+
+utils.storage.set('user', { id: 1, name: 'Ada' }, 3600);
+const user = utils.storage.get('user');
+```
+
+## Module reference
+
+### ajax
+
+The `ajax` module is a jQuery-based HTTP helper with a feature set aimed at frontend productivity.
+
+Available exports:
+
+- `configure(opts)`
+- `request(options)`
+- `get(url, data, opts)`
+- `post(url, data, opts)`
+- `put(url, data, opts)`
+- `patch(url, data, opts)`
+- `del(url, opts)`
+- `upload(url, files, extraData, opts)`
+- `download(url, filename, opts)`
+- `sse(url, opts)`
+- `clearCache()`
+- `removeCacheEntry(url, method, data)`
+- `abort(requestId)`
+- `abortAll()`
+- `isPending()`
+
+Example with retry and cache:
+
+```js
+ajax.configure({
+  cache: true,
+  cacheTTL: 300,
+  retries: 2,
+  retryDelay: 1000,
+  useExponentialBackoff: true,
+});
+
+ajax.get('/api/products', { category: 'books' });
+```
+
+### bootstrap
+
+Provides simplified wrappers around Bootstrap 5 components.
+
+Examples:
+
+```js
+bootstrap.toast({
+  title: 'Info',
+  message: 'Saved successfully',
+  variant: 'success',
+  delay: 5000,
+});
+
+bootstrap.alert('Your session is about to expire.', 'warning');
+
+bootstrap.offcanvas({
+  title: 'Filters',
+  body: '<div>Filter controls go here...</div>',
+  placement: 'end',
+});
+```
+
+Supports:
+
+- `initTooltipsAndPopovers(scope)`
+- `modal(options)`
+- `offcanvas(options)`
+- `toast(options)`
+- `toastSuccess(message, title)`
+- `toastError(message, title)`
+- `toastWarning(message, title)`
+- `toastQueue(options)`
+- `alert(message, variant, target, dismissible, fade)`
+- `carousel(selector, options)`
+- `collapse(selector, options)`
+- `tab(selector)`
+- `popover(element, options)`
+- `tooltip(element, options)`
+- `dropdown(element)`
+- `notify({ title, message, variant })`
+
+### form
+
+The `form` module focuses on validation and form automation.
+
+Common validators:
+
+- `required`
+- `minlength`
+- `maxlength`
+- `email`
+- `url`
+- `pattern`
+- `match`
+
+You can extend validation with custom rules:
+
+```js
+form.addRule('strongPassword', (value) => {
+  return /^(?=.*[A-Z])(?=.*\d).{8,}$/.test(value)
+    ? true
+    : 'Password must be at least 8 characters and include one uppercase letter and one number.';
+});
+```
+
+Additional helpers:
+
+- `validateField(form, fieldName, fieldRules, options)`
+- `validate(formSelector, rules, options)`
+- `setValues(formSelector, data)`
+- `clear(formSelector)`
+- `mask(selector, pattern)`
+- `serializeForm(form, asJson)`
+- `autoSave(formSelector, saveFn, interval)`
+- `filePreview(inputSelector, previewSelector)`
+- `charCounter(inputSelector, targetSelector, max)`
+- `confirmReset(formSelector, message)`
+
+### encryption
+
+Use the browser Web Crypto API for secure client-side encryption and JWT support.
+
+```js
+import { encryption } from '@mlangeni-group/web-ux';
+
+const secret = 'my-very-secret-key';
+const cipher = await encryption.encryptAES('Hello world', secret);
+const plain = await encryption.decryptAES(cipher, secret);
+```
+
+The module includes:
+
+- `encryptAES(plaintext, password)`
+- `decryptAES(ciphertextBase64, password)`
+- `sha256(message)`
+- `importRawKey(base64Key)`
+- `encryptWithKey(plaintext, key)`
+- `decryptWithKey(dataBase64, ivBase64, tagBase64, key)`
+- `encryptToJson(plaintext, key)`
+- `decryptFromJson(jsonString, key)`
+- `base64.encode()` / `base64.decode()`
+- `jwt.decode(token)` / `jwt.verify(token, secretOrPublicKey, options)`
+
+Note: JWT verification is delegated to the `jsonwebtoken` package and is intended for browser use when required.
+
+### utils
+
+The `utils` module contains general-purpose browser utilities and helpers that reduce boilerplate.
+
+Examples:
+
+```js
+import { utils } from '@mlangeni-group/web-ux';
+
+const formData = utils.queryString.stringify({ page: 1, q: 'search term' });
+const dateLabel = utils.date.format(new Date(), 'YYYY-MM-DD');
+const value = utils.deepMerge({ a: { b: 1 } }, { a: { c: 2 } });
+
+utils.copyToClipboard('copied text');
+```
+
+Key utilities include:
+
+- `debounce(fn, delay)`
+- `throttle(fn, limit)`
+- `deepClone(obj)`
+- `deepMerge(target, source)`
+- `uuid()`
+- `randomId(length)`
+- `storage.set/get/remove/clear`
+- `copyToClipboard(text)`
+- `formatBytes(bytes, decimals)`
+- `queryString.stringify` / `parse`
+- `date.format` / `date.relativeTime`
+- `number.format` / `number.currency`
+- `isEmail`, `isUrl`, `isNumeric`
+- `events.on/off/emit`
+- `cozyTheme(options)`
+- `lazyLoadImages(selector, rootMargin)`
+- `loadScript(url, attrs)`
+
+### env
+
+Use the environment helper to set, merge, and read runtime config values.
+
+```js
+import { env } from '@mlangeni-group/web-ux';
+
+env.setEnv({ API_URL: 'https://api.example.com', DEBUG: true });
+console.log(env.env('API_URL', '/api'));
+```
+
+You can also load settings from a JSON script tag:
+
+```html
+<script id="__env-data" type="application/json">
+  {"API_URL":"https://api.example.com","DEBUG":true}
 </script>
 ```
 
-The JWT helpers in `webux.encryption.jwt` rely on `jsonwebtoken`, which is Node-oriented and is not included in the browser bundle.
-
----
-
-TypeScript Support
-
-Full type definitions are included (types.d.ts). Import types as needed:
-
-```typescript
-import { ajax, bootstrap, form } from 'web-ux';
-import type { ModalOptions, ToastOptions } from 'web-ux/bootstrap';
+```js
+env.loadFromBackend();
 ```
+
+### i18n
+
+Small translation helper for UI strings.
+
+```js
+import { i18n } from '@mlangeni-group/web-ux';
+
+i18n.load({
+  greeting: 'Hello, {{name}}!',
+  logout: 'Sign out',
+});
+
+console.log(i18n.t('greeting', { name: 'Ada' }));
+```
+
+### store
+
+Simple state container with a subscribe-based store API.
+
+```js
+import { store } from '@mlangeni-group/web-ux';
+
+const appStore = store.create({ theme: 'light' });
+appStore.subscribe('theme', (value) => {
+  console.log('Theme changed:', value);
+});
+
+appStore.set('theme', 'dark');
+console.log(appStore.get('theme'));
+```
+
+### loader
+
+Loading indicators and skeletons for async UI states.
+
+```js
+import { loader } from '@mlangeni-group/web-ux';
+
+loader.showSpinner('#app-loader');
+loader.showPageLoader({ type: 'dots' });
+loader.loadingButton('#save-button', true);
+```
+
+Available helpers:
+
+- `showSpinner(target)`
+- `hideSpinner(target)`
+- `showProgress(percent, options)`
+- `hideProgress(target)`
+- `showPageLoader(options)`
+- `hidePageLoader()`
+- `loadingButton(selector, loading)`
+- `showSkeleton(container, options)`
+- `hideSkeleton(container)`
+
+### cookie
+
+```js
+import { cookie } from '@mlangeni-group/web-ux';
+
+cookie.setCookie('token', 'abc123', 7, '/');
+const token = cookie.getCookie('token');
+```
+
+### dom
+
+Helpers for scrolling, viewport checks, and simple DOM-based form handling.
+
+```js
+import { dom } from '@mlangeni-group/web-ux';
+
+dom.scrollTo('#pricing-section');
+dom.infiniteScroll(window, async () => {
+  console.log('Load more items');
+});
+```
+
+### perf
+
+Simple performance timing utilities.
+
+```js
+import { perf } from '@mlangeni-group/web-ux';
+
+perf.start('render-chart');
+// do work
+perf.end('render-chart');
+
+perf.measure('api-call', () => {
+  // expensive operation
+});
+```
+
+## Environment variables
+
+You can load environment settings from a global `window.__ENV` value or an inline JSON block:
+
+```js
+window.__ENV = {
+  API_URL: 'https://api.example.com',
+  DEBUG: true,
+};
+```
+
+Then:
+
+```js
+import { env } from '@mlangeni-group/web-ux';
+
+const apiUrl = env.env('API_URL', '/api');
+```
+
+## Browser patterns and conventions
+
+This package is intentionally opinionated toward browser-based workflows. Most helpers assume:
+
+- a modern browser environment
+- Bootstrap 5 is available for UI components
+- jQuery is available for DOM operations and AJAX
+- `window`, `document`, `localStorage`, and `crypto.subtle` are available in runtime
+
+## Notes
+
+- The package is primarily a frontend utility toolkit, not a framework.
+- Some functions such as JWT validation require the `jsonwebtoken` peer dependency.
+- Crypto helpers are designed for browser use and follow Web Crypto best practices.
+- This package is best used in apps already built around jQuery and Bootstrap, or in migration projects where a shared frontend utility layer reduces duplication.
+
+## License
+
+MIT
+
+## Author
+
+Precious Lyson, Mlangeni Group
