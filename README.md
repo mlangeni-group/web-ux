@@ -377,7 +377,14 @@ i18n.load({
 });
 
 console.log(i18n.t('greeting', { name: 'Ada' }));
+
+i18n.load({ greeting: 'Bonjour, {{name}}!' }, 'fr');
+i18n.setLocale('fr');
+console.log(i18n.t('greeting', { name: 'Ada' }));
 ```
+
+Catalogs can use nested objects and dot-separated keys. Missing keys fall back
+to the English catalog and then to the key itself.
 
 ### store
 
@@ -404,8 +411,12 @@ import { loader } from '@mlangeni-group/web-ux';
 
 loader.showSpinner('#app-loader');
 loader.showPageLoader({ type: 'dots' });
+loader.showPageLoader({ type: 'bars' });
 loader.loadingButton('#save-button', true);
 ```
+
+Available page loader presets: `spinner`, `dots`, `pulse`, `bounce`, `bars`,
+`ring`, `progress`, and `text`. Unknown preset names use `spinner`.
 
 Available helpers:
 
@@ -418,6 +429,11 @@ Available helpers:
 - `loadingButton(selector, loading)`
 - `showSkeleton(container, options)`
 - `hideSkeleton(container)`
+
+`showSkeleton` measures each target before replacing its contents, then sizes the
+skeleton to the target and fills its height with rounded, shimmering placeholder
+lines. Its existing `rows` and Bootstrap `animation` options are supported; the
+shimmer respects the user's reduced-motion preference.
 
 ### cookie
 
