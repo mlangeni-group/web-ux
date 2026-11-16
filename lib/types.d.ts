@@ -65,8 +65,16 @@ declare module 'web-ux' {
     hideSpinner(target?: string): void;
     showProgress(percent?: number, options?: any): void;
     hideProgress(target?: string): void;
-    showPageLoader(): void;
-    hidePageLoader(): void;
+    showPageLoader(options?: {
+      type?: 'spinner' | 'dots' | 'pulse' | 'bounce' | 'bars' | 'ring' | 'progress' | 'text';
+      html?: string;
+      style?: Record<string, string | number>;
+      className?: string;
+      container?: string;
+      showImmediately?: boolean;
+      fadeInDelay?: number;
+    }): void;
+    hidePageLoader(options?: { fadeOutDelay?: number }): void;
     loadingButton(selector: string, loading?: boolean): void;
   };
   export const dom: {
