@@ -26,7 +26,7 @@ This package is designed for modern web apps that want:
 - Form validation rules, custom rules, auto-save, reset confirmation, and file preview
 - Translation support via `i18n.t(...)`
 - Local storage wrappers and browser-friendly utility helpers
-- Environment variable loading via `window.__ENV` or a JSON script tag
+- Production-hardened environment variable loading via `window.__ENV`, JSON script tags, and secure runtime merging
 - Web Crypto-based encryption helpers, including Bangwe-compatible AES-GCM helpers
 - Performance timing helpers and simple pub/sub event bus
 - Cookie helpers and DOM utilities
@@ -325,31 +325,48 @@ Key utilities include:
 
 - `debounce(fn, delay)`
 - `throttle(fn, limit)`
+- `once(fn)`, `sleep(delay, { signal })`, `clamp(value, min, max)`
 - `deepClone(obj)`
 - `deepMerge(target, source)`
 - `uuid()`
 - `randomId(length)`
-- `storage.set/get/remove/clear`
+- `storage.set/get/remove/clear` (storage is namespaced; `clear` only removes this package's entries)
 - `copyToClipboard(text)`
 - `formatBytes(bytes, decimals)`
-- `queryString.stringify` / `parse`
+- `queryString.stringify` / `parse` (array values and repeated query keys are supported)
 - `date.format` / `date.relativeTime`
 - `number.format` / `number.currency`
 - `isEmail`, `isUrl`, `isNumeric`
-- `events.on/off/emit`
+- `events.on/once/off/emit/clear/listenerCount`
 - `cozyTheme(options)`
-- `lazyLoadImages(selector, rootMargin)`
-- `loadScript(url, attrs)`
+- `lazyLoadImages(selector, rootMargin)` (returns a disconnect function)
+- `loadScript(url, attrs)`, `waitForElement(selector, options)`
+- `onBreakpoint(callback)`, `initColorScheme(options)` (both return cleanup methods)
+
+Random IDs use the Web Crypto API. `deepMerge` only accepts plain objects and ignores
+prototype-related keys; arrays are replaced rather than merged. Debounced and throttled
+functions support `cancel()` and `flush()`.
 
 ### env
 
 Use the environment helper to set, merge, and read runtime config values.
+
+The helper is now production-hardened and includes safe normalization, synchronized `window.__ENV` updates, and explicit helpers for inspecting or resetting runtime config.
 
 ```js
 import { env } from '@mlangeni-group/web-ux';
 
 env.setEnv({ API_URL: 'https://api.example.com', DEBUG: true });
 console.log(env.env('API_URL', '/api'));
+console.log(env.getEnv());
+console.log(env.hasEnv('DEBUG'));
+```
+
+Additional helpers:
+
+```js
+env.mergeEnv({ FEATURE_X: true, API_TIMEOUT: 5000 });
+env.resetEnv({ API_URL: '/api' });
 ```
 
 You can also load settings from a JSON script tag:
@@ -363,6 +380,30 @@ You can also load settings from a JSON script tag:
 ```js
 env.loadFromBackend();
 ```
+
+Remote JSON loading is also supported with timeout and credentials configuration:
+
+```js
+await env.loadFromUrl('/config/runtime.json', {
+  timeout: 5000,
+  credentials: 'same-origin',
+  headers: {
+    'X-App-Client': 'web-ux',
+  },
+});
+```
+
+Recent upgrades include:
+
+- object normalization to avoid invalid runtime state
+- safe `hasOwnProperty` handling without prototype pollution risk
+- automatic `window.__ENV` synchronization
+- `getEnv()`, `hasEnv()`, and `resetEnv()` helpers
+- optional timeout support for remote env fetches
+- script id customization for `loadFromBackend(scriptId)`
+- backward-compatible exported API for existing integrations
+
+The module also exports a default `envStore` instance for codebases that prefer a singleton-style runtime configuration object.
 
 ### i18n
 
