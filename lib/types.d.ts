@@ -42,24 +42,83 @@ declare module 'web-ux' {
     jwt: { decode(token: string): any; verify(token: string, secret: string, options?: any): any };
   };
   export const utils: {
-    debounce(fn: Function, delay: number): Function;
-    throttle(fn: Function, limit: number): Function;
+    debounce(
+      fn: (...args: any[]) => any,
+      delay: number,
+      options?: { leading?: boolean; trailing?: boolean }
+    ): ((...args: any[]) => any) & { cancel(): void; flush(): any };
+    throttle(
+      fn: (...args: any[]) => any,
+      limit: number,
+      options?: { leading?: boolean; trailing?: boolean }
+    ): ((...args: any[]) => any) & { cancel(): void; flush(): any };
+    once<T extends (...args: any[]) => any>(fn: T): T;
+    sleep(delay: number, options?: { signal?: AbortSignal }): Promise<void>;
+    clamp(value: number, min: number, max: number): number;
+    isPlainObject(value: any): boolean;
     deepClone(obj: any): any;
     deepMerge(target: any, source: any): any;
     uuid(): string;
     queryString: { stringify(obj: any): string; parse(str: string): any };
     date: { format(date: any, format?: string): string; relativeTime(date: any): string };
-    number: { format(num: number, locales?: string): string; currency(num: number, currency?: string, locales?: string): string };
+    number: {
+      format(num: number, locales?: string | string[], options?: Intl.NumberFormatOptions): string;
+      currency(num: number, currency?: string, locales?: string | string[], options?: Intl.NumberFormatOptions): string;
+    };
     isEmail(str: string): boolean;
-    isUrl(str: string): boolean;
-    isNumeric(str: string): boolean;
-    debounceLeading(fn: Function, delay: number): Function;
-    storage: any;
+    isUrl(str: string, protocols?: string[]): boolean;
+    isNumeric(value: string | number): boolean;
+    debounceLeading(
+      fn: (...args: any[]) => any,
+      delay: number
+    ): ((...args: any[]) => any) & { cancel(): void; flush(): any };
+    storage: {
+      set(key: string, value: unknown, ttlSeconds?: number | null): void;
+      get<T = unknown>(key: string): T | null;
+      remove(key: string): void;
+      clear(): void;
+    };
     copyToClipboard(text: string): Promise<void>;
     formatBytes(bytes: number, decimals?: number): string;
     randomId(length?: number): string;
+    events: {
+      on(event: string | symbol, fn: Function): () => void;
+      once(event: string | symbol, fn: Function): () => void;
+      off(event: string | symbol, fn?: Function): void;
+      emit(event: string | symbol, ...args: any[]): void;
+      clear(event?: string | symbol): void;
+      listenerCount(event: string | symbol): number;
+    };
+    cozyTheme(options?: object): void;
+    lazyLoadImages(selector?: string, rootMargin?: string): () => void;
+    loadScript(url: string, attrs?: Record<string, string | number | boolean>): Promise<HTMLScriptElement>;
+    waitForElement(
+      selector: string,
+      options?: { root?: ParentNode; timeout?: number; signal?: AbortSignal }
+    ): Promise<Element>;
+    onBreakpoint(callback: (breakpoint: string) => void): () => void;
+    initColorScheme(options?: {
+      storageKey?: string;
+      attribute?: string;
+      target?: HTMLElement;
+    }): {
+      toggle(): void;
+      set(scheme: 'dark' | 'light' | 'system'): void;
+      destroy(): void;
+    };
+    scrollTo(target: string | Element, offset?: number): boolean;
+    triggerTransition(element: any, className: string, duration?: number): void;
   };
-  export const env: { setEnv(obj: object): void; env(key: string, defaultValue?: any): any };
+  export const env: {
+    setEnv(obj: Record<string, any>): Record<string, any>;
+    mergeEnv(obj: Record<string, any>): Record<string, any>;
+    getEnv(): Record<string, any>;
+    hasEnv(key: string): boolean;
+    resetEnv(obj?: Record<string, any>): Record<string, any>;
+    env(key: string, defaultValue?: any): any;
+    loadFromUrl(url: string, options?: { headers?: Record<string, string>; timeout?: number; credentials?: RequestCredentials }): Promise<Record<string, any>>;
+    loadFromBackend(scriptId?: string): Record<string, any>;
+  };
   export const loader: {
     showSpinner(target?: string): void;
     hideSpinner(target?: string): void;
