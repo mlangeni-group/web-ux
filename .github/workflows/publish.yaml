@@ -1,20 +1,38 @@
-name: Publish Package to npmjs
+name: Validate and publish package
+
 on:
+  push:
+  pull_request:
   release:
     types: [published]
+
 jobs:
-  build:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  publish:
+    if: github.event_name == 'release'
+    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v4
         with:
           node-version: '24.x'
           registry-url: 'https://registry.npmjs.org'
+          cache: npm
       - run: npm ci
       - run: npm publish --provenance --access public
         env:
