@@ -16,8 +16,9 @@ This package is designed for modern web apps that want:
 - form validation and masking helpers
 - lightweight state management and local storage utilities
 - environment loading and translation helpers
-- crypto utilities for AES, base64, and JWT usage in the browser
+- crypto utilities for AES, base64, and safe JWT payload decoding
 - page loading indicators, skeletons, and progress utilities
+- accessible UI announcements, locale-aware pluralization, and offline stale-cache fallback
 
 ## Features
 
@@ -30,22 +31,23 @@ This package is designed for modern web apps that want:
 - Web Crypto-based encryption helpers, including Bangwe-compatible AES-GCM helpers
 - Performance timing helpers and simple pub/sub event bus
 - Cookie helpers and DOM utilities
+- Safe-by-default text rendering in Bootstrap helpers, reduced-motion-aware toast effects, and accessible form errors
 
 ## Installation
 
 Install the package and required browser dependencies:
 
 ```bash
-npm install @mlangeni-group/web-ux jquery bootstrap jsonwebtoken
+npm install @mlangeni-group/web-ux jquery bootstrap
 ```
 
-If you are using Bootstrap in a plain HTML page, include the scripts before your bundle:
+The package provides ESM and CommonJS builds, plus a standalone browser bundle. For a plain HTML page, use the browser bundle:
 
 ```html
-<script src="/node_modules/jquery/dist/jquery.min.js"></script>
-<script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module" src="dist/web-ux.js"></script>
+<script src="/node_modules/@mlangeni-group/web-ux/dist/web-ux.js"></script>
 ```
+
+The standalone browser bundle includes jQuery and Bootstrap. For bundlers, use the package normally; `import` selects ESM and `require` selects CommonJS, with jQuery and Bootstrap available as peer dependencies. TypeScript declarations are included.
 
 ## Importing
 
@@ -88,7 +90,6 @@ ajax.configure({
   timeout: 30000,
   showLoader: true,
   loaderType: 'spinner',
-  tokenGetter: () => localStorage.getItem('token'),
   showToasts: true,
 });
 
@@ -96,6 +97,10 @@ ajax.get('/users', { page: 1, limit: 20 })
   .then((users) => console.log(users))
   .catch((error) => console.error(error));
 ```
+
+Requests use Fetch and accept `AbortSignal`. Retries default to idempotent methods and transient network/HTTP failures only; unsafe methods require `retryUnsafeMethods: true`. `cache` is opt-in, bounded in-memory (100 entries by default), and returns cloned values. Set `staleIfError: true` to return an expired cached GET result when the network is unavailable or the server returns a transient failure. Cache entries vary by authorization header and can be removed with `ajax.removeCacheEntry(...)`.
+
+Failures reject with `ajax.HttpError`, which includes `status`, `response`, and `headers`. Avoid caching private responses unless you understand the sensitivity and lifetime of the data.
 
 ### 2) Send a POST request
 
@@ -131,6 +136,8 @@ bootstrap.modal({
 });
 ```
 
+Modal and offcanvas `body` values, toast messages, and alerts are rendered as text by default. To render HTML in a modal/offcanvas body, pass `html: true` only for trusted, application-authored content. Toasts expose polite live announcements by default, announce danger variants assertively, and respect reduced-motion preferences.
+
 ### 4) Validate a form
 
 ```js
@@ -146,11 +153,14 @@ form.validate('#login-form', {
     minlength: 8,
   },
 }, {
+  errorSummary: true,
   onSubmit: (data) => {
     console.log('Form payload:', data);
   },
 });
 ```
+
+For validators that return promises (for example, checking a username), use `form.validateAsync(...)`. Both validation APIs return a `destroy()` method that removes only listeners they registered.
 
 ### 5) Use the storage utility
 
@@ -165,12 +175,13 @@ const user = utils.storage.get('user');
 
 ### ajax
 
-The `ajax` module is a jQuery-based HTTP helper with a feature set aimed at frontend productivity.
+The `ajax` module is a Fetch-based HTTP helper with XHR-backed upload and download progress support.
 
 Available exports:
 
 - `configure(opts)`
 - `request(options)`
+- `requestAll(requests, options)`
 - `get(url, data, opts)`
 - `post(url, data, opts)`
 - `put(url, data, opts)`
@@ -184,6 +195,7 @@ Available exports:
 - `abort(requestId)`
 - `abortAll()`
 - `isPending()`
+- `HttpError`
 
 Example with retry and cache:
 
@@ -219,6 +231,8 @@ bootstrap.offcanvas({
   title: 'Filters',
   body: '<div>Filter controls go here...</div>',
   placement: 'end',
+  html: true,
+  html: true,
 });
 ```
 
@@ -280,7 +294,7 @@ Additional helpers:
 
 ### encryption
 
-Use the browser Web Crypto API for secure client-side encryption and JWT support.
+Use the browser Web Crypto API for client-side encryption.
 
 ```js
 import { encryption } from '@mlangeni-group/web-ux';
@@ -301,9 +315,9 @@ The module includes:
 - `encryptToJson(plaintext, key)`
 - `decryptFromJson(jsonString, key)`
 - `base64.encode()` / `base64.decode()`
-- `jwt.decode(token)` / `jwt.verify(token, secretOrPublicKey, options)`
+- `jwt.decode(token)`
 
-Note: JWT verification is delegated to the `jsonwebtoken` package and is intended for browser use when required.
+`jwt.decode` only parses an untrusted token payload; it does not verify its signature or claims. Authorization and token verification must happen on the server. Do not embed signing secrets in browser code.
 
 ### utils
 
@@ -424,8 +438,15 @@ i18n.setLocale('fr');
 console.log(i18n.t('greeting', { name: 'Ada' }));
 ```
 
-Catalogs can use nested objects and dot-separated keys. Missing keys fall back
-to the English catalog and then to the key itself.
+Catalogs can use nested objects and dot-separated keys. Missing keys fall back to the English catalog and then to the key itself. Plural catalogs use `one`, `other`, and locale-specific `Intl.PluralRules` categories:
+
+```js
+i18n.load({ files: { one: '{{count}} file', other: '{{count}} files' } }, 'en');
+i18n.tp('files', 3);
+i18n.formatCurrency(12.5, 'USD');
+i18n.formatDate(new Date(), { dateStyle: 'medium' });
+i18n.formatRelativeTime(-2, 'day');
+```
 
 ### store
 
@@ -481,9 +502,16 @@ shimmer respects the user's reduced-motion preference.
 ```js
 import { cookie } from '@mlangeni-group/web-ux';
 
-cookie.setCookie('token', 'abc123', 7, '/');
-const token = cookie.getCookie('token');
+cookie.setCookie('preference', 'compact', {
+  maxAge: 86400,
+  path: '/',
+  sameSite: 'Lax',
+  secure: true,
+});
+const preference = cookie.getCookie('preference');
 ```
+
+JavaScript cannot set `HttpOnly`. Session/authentication cookies should be issued by the server with `HttpOnly`, `Secure`, and an appropriate `SameSite` policy; do not store sensitive bearer tokens in `localStorage`.
 
 ### dom
 
@@ -545,9 +573,10 @@ This package is intentionally opinionated toward browser-based workflows. Most h
 ## Notes
 
 - The package is primarily a frontend utility toolkit, not a framework.
-- Some functions such as JWT validation require the `jsonwebtoken` peer dependency.
+- JWT payload decoding is not signature verification or authorization.
 - Crypto helpers are designed for browser use and follow Web Crypto best practices.
 - This package is best used in apps already built around jQuery and Bootstrap, or in migration projects where a shared frontend utility layer reduces duplication.
+- `npm test` runs the focused Node test suite; `npm run build` generates ESM, CommonJS, and standalone browser artifacts.
 
 ## License
 

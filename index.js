@@ -1,19 +1,19 @@
 /**
- * Frontend utilities for jQuery, Bootstrap 5, and JWT.
+ * Browser-first frontend utilities for jQuery and Bootstrap 5.
  */
-import * as ajax from './lib/ajax';
-import * as bootstrap from './lib/bootstrap';
-import * as encryption from './lib/encryption';
-import * as utils from './lib/utils';
-import * as env from './lib/env';
-import * as loader from './lib/loader';
-import * as dom from './lib/dom';
-import * as cookie from './lib/cookie';
-import * as form from './lib/form';
-import * as i18n from './lib/i18n';
-import * as store from './lib/store';
-import * as log from './lib/log';
-import * as perf from './lib/perf';
+import * as ajax from './lib/ajax.js';
+import * as bootstrap from './lib/bootstrap.js';
+import * as encryption from './lib/encryption.js';
+import * as utils from './lib/utils.js';
+import * as env from './lib/env.js';
+import * as loader from './lib/loader.js';
+import * as dom from './lib/dom.js';
+import * as cookie from './lib/cookie.js';
+import * as form from './lib/form.js';
+import * as i18n from './lib/i18n.js';
+import * as store from './lib/store.js';
+import * as log from './lib/log.js';
+import * as perf from './lib/perf.js';
 
 export { ajax, bootstrap, encryption, utils, env, loader, dom, cookie, form, i18n, store, log, perf };
 export default { ajax, bootstrap, encryption, utils, env, loader, dom, cookie, form, i18n, store, log, perf };
